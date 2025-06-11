@@ -595,7 +595,7 @@ open class YoutubeDL: NSObject {
         var formats: [Format] = []
         let decoder = PythonDecoder()
 
-        var formats_to_download_array: [PythonObject] = []
+        
         let formats_to_download_array: PythonObject
         do {
             formats_to_download_array = try Python.list(formats_to_download) //trans to  Python list
