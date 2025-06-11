@@ -595,28 +595,25 @@ open class YoutubeDL: NSObject {
         var formats: [Format] = []
         let decoder = PythonDecoder()
 
-        // 将迭代器转为数组，捕获可能的异常
         var formats_to_download_array: [PythonObject] = []
+        let formats_to_download_array: PythonObject
         do {
-            formats_to_download_array = try Array(formats_to_download)
+            formats_to_download_array = try Python.list(formats_to_download) //trans to  Python list
         } catch {
-            //print(#function, "Failed to iterate formats_to_download:", error)
-            // 继续处理，即使迭代失败，formats_to_download_array 为空
+            print(#function, "Failed to convert formats_to_download:", error)
         }
 
-        // 迭代数组（不再依赖 Python 迭代器）
         for format in formats_to_download_array {
-            print(#function, "Processing format:", format)
             do {
                 let decodedFormat = try decoder.decode(Format.self, from: format)
                 formats.append(decodedFormat)
             } catch {
-              //  print(#function, "格式解码失败：\(error)")
-                continue // 跳过解码失败的格式
+                continue // skip
             }
         }
 
         return (formats, try decoder.decode(Info.self, from: info))
+
     }
     
     func tryMerge(directory: URL, title: String, timeRange: TimeRange?) -> Bool {
