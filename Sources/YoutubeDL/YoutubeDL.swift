@@ -590,13 +590,13 @@ open class YoutubeDL: NSObject {
         let formats_to_download = format_selector(info)
 
         var formats: [Format] = []
-        let decoder = PythonDecoder()
+        // let decoder = PythonDecoder()
 
-        for format in formats_to_download {
-            let format = try decoder.decode(Format.self, from: format)
-            formats.append(format)
-        }
-        
+         // for format in formats_to_download {
+        //  let format = try decoder.decode(Format.self, from: format)
+         //   formats.append(format)
+        // }
+
         return (formats, try decoder.decode(Info.self, from: info))
     }
     
