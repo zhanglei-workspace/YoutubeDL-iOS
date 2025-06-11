@@ -592,39 +592,11 @@ open class YoutubeDL: NSObject {
         var formats: [Format] = []
         let decoder = PythonDecoder()
 
-        
-        let safe_iterate_formats = """
-        def safe_iterate_formats(selector, info):
-            result = []
-            try:
-                for fmt in selector(info):
-                    if 'url' in fmt and fmt['url']:  
-                        result.append(fmt)
-            except Exception:
-                pass
-            return result
-        """
-        try Python.attemptImport("builtins").exec(safe_iterate_formats)
+        let format = try decoder.decode(Format.self, from: format)
+        formats.append(format)
 
         
-        let formats_to_download_array = pythonObject.safe_iterate_formats(format_selector, info)
-
-        for format in formats_to_download_array {
-            do {
-                let decodedFormat = try decoder.decode(Format.self, from: format)
-                formats.append(decodedFormat)
-            } catch {
-                continue // skip
-            }
-        }
-
-        do {
-            let decodedInfo = try decoder.decode(Info.self, from: info)
-            return (formats, decodedInfo)
-        } catch {
-            print(#function, "Failed to decode Info:", error)
-            return (formats, Info(id: "", title: "", formats: [], webpage_url_basename: "")) 
-        }
+        return (formats, try decoder.decode(Info.self, from: info))
     }
     
     func tryMerge(directory: URL, title: String, timeRange: TimeRange?) -> Bool {
