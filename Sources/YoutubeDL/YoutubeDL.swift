@@ -888,7 +888,7 @@ extension URLSessionDownloadTask {
 }
 
 // https://github.com/yt-dlp/yt-dlp/blob/4f08e586553755ab61f64a5ef9b14780d91559a7/yt_dlp/YoutubeDL.py#L338
-public func yt_dlp(argv: [String], progress: (([String: PythonObject]) -> Void)? = nil, log: ((String, String) -> Void)? = nil, makeTranscodeProgressBlock: (() -> ((Double) -> Void)?)? = nil) async throws {
+public func yt_dlp(argv: [String], progress: (([String: PythonObject]) -> Void)? = nil, log: ((String, String) -> Void)? = nil, makeTranscodeProgressBlock: (() -> ((Double) -> Void)?)? = nil) async throws -> Info{
     let context = Context()
     let yt_dlp = try await YtDlp(context: context)
     
@@ -930,8 +930,18 @@ public func yt_dlp(argv: [String], progress: (([String: PythonObject]) -> Void)?
     ydl.add_post_processor(myPP, when: "before_dl")
     
     context.willTranscode = makeTranscodeProgressBlock
-    
+
     try ydl.download.throwing.dynamicallyCall(withArguments: all_urls)
+
+    // 获取首个 URL 的 Info
+    guard let firstURLString = Array(all_urls).first as? String,
+          let url = URL(string: firstURLString) else {
+        throw NSError(domain: "YtDlp", code: -1, userInfo: [NSLocalizedDescriptionKey: "No valid URL found"])
+    }
+    let (_, info) = try await context.extractInfo(url: url)
+    
+
+    return info
 }
 
 /// Make custom logger. https://github.com/yt-dlp/yt-dlp#adding-logger-and-progress-hook
