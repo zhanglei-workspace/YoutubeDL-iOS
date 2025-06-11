@@ -583,25 +583,31 @@ open class YoutubeDL: NSObject {
             pythonObject = try await makePythonObject()
         }
 
-        print(#function, url)
+        //print(#function, url)
         let info = try pythonObject.extract_info.throwing.dynamicallyCall(withKeywordArguments: ["": url.absoluteString, "download": false, "process": true])
-        //print(info)
-//        print(#function, "throttled:", pythonObject.throttled)
-        
+
         let format_selector = pythonObject.build_format_selector(options!["format"])
         let formats_to_download = format_selector(info)
-
 
         var formats: [Format] = []
         let decoder = PythonDecoder()
 
         
-        let formats_to_download_array: PythonObject
-        do {
-            formats_to_download_array = try Python.list(formats_to_download) //trans to  Python list
-        } catch {
-            print(#function, "Failed to convert formats_to_download:", error)
-        }
+        let safe_iterate_formats = """
+        def safe_iterate_formats(selector, info):
+            result = []
+            try:
+                for fmt in selector(info):
+                    if 'url' in fmt and fmt['url']:  
+                        result.append(fmt)
+            except Exception:
+                pass
+            return result
+        """
+        try Python.attemptImport("builtins").exec(safe_iterate_formats)
+
+        
+        let formats_to_download_array = pythonObject.safe_iterate_formats(format_selector, info)
 
         for format in formats_to_download_array {
             do {
@@ -612,8 +618,13 @@ open class YoutubeDL: NSObject {
             }
         }
 
-        return (formats, try decoder.decode(Info.self, from: info))
-
+        do {
+            let decodedInfo = try decoder.decode(Info.self, from: info)
+            return (formats, decodedInfo)
+        } catch {
+            print(#function, "Failed to decode Info:", error)
+            return (formats, Info(id: "", title: "", formats: [], webpage_url_basename: "")) 
+        }
     }
     
     func tryMerge(directory: URL, title: String, timeRange: TimeRange?) -> Bool {
