@@ -931,15 +931,22 @@ public func yt_dlp(argv: [String], progress: (([String: PythonObject]) -> Void)?
     
     context.willTranscode = makeTranscodeProgressBlock
 
-    try ydl.download.throwing.dynamicallyCall(withArguments: all_urls)
 
-    // 获取首个 URL 的 Info
-    guard let firstURLString = Array(all_urls).first as? String,
-          let url = URL(string: firstURLString) else {
-        throw NSError(domain: "YtDlp", code: -1, userInfo: [NSLocalizedDescriptionKey: "No valid URL found"])
-    }
-    let (_, info) = try await context.extractInfo(url: url)
+    var info = Info(id: "", title: "", formats: [], webpage_url_basename: "") 
+        if let firstURL = Array(all_urls).first,
+           let firstURLString = String(firstURL),
+           let url = URL(string: firstURLString) {
+            do {
+                let (_, extractedInfo) = try await context.extractInfo(url: url)
+                info = extractedInfo
+            } catch {
+                print(#function, "Failed to extract info:", error)
+                
+            }
+        }
     
+
+    try ydl.download.throwing.dynamicallyCall(withArguments: all_urls)
 
     return info
 }
