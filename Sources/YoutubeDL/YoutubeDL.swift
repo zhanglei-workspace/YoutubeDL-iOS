@@ -590,20 +590,32 @@ open class YoutubeDL: NSObject {
         
         let format_selector = pythonObject.build_format_selector(options!["format"])
         let formats_to_download = format_selector(info)
+
+
         var formats: [Format] = []
         let decoder = PythonDecoder()
-        
-       do {
-           for format in formats_to_download {
-            let decodedFormat = try decoder.decode(Format.self, from: format)
-            formats.append(decodedFormat)
-            } 
+
+        // 将迭代器转为数组，捕获可能的异常
+        var formats_to_download_array: [PythonObject] = []
+        do {
+            formats_to_download_array = try Array(formats_to_download)
+        } catch {
+            //print(#function, "Failed to iterate formats_to_download:", error)
+            // 继续处理，即使迭代失败，formats_to_download_array 为空
         }
-        catch {
-            print("格式解码失败：\(error)")
+
+        // 迭代数组（不再依赖 Python 迭代器）
+        for format in formats_to_download_array {
+            print(#function, "Processing format:", format)
+            do {
+                let decodedFormat = try decoder.decode(Format.self, from: format)
+                formats.append(decodedFormat)
+            } catch {
+              //  print(#function, "格式解码失败：\(error)")
+                continue // 跳过解码失败的格式
+            }
         }
-    
-        
+
         return (formats, try decoder.decode(Info.self, from: info))
     }
     
