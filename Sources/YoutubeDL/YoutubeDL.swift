@@ -585,21 +585,24 @@ open class YoutubeDL: NSObject {
 
         print(#function, url)
         let info = try pythonObject.extract_info.throwing.dynamicallyCall(withKeywordArguments: ["": url.absoluteString, "download": false, "process": true])
-        print(info)
+        //print(info)
 //        print(#function, "throttled:", pythonObject.throttled)
         
         let format_selector = pythonObject.build_format_selector(options!["format"])
         let formats_to_download = format_selector(info)
         var formats: [Format] = []
         let decoder = PythonDecoder()
-        for format in formats_to_download {
-           do {
+        
+       do {
+           for format in formats_to_download {
             let decodedFormat = try decoder.decode(Format.self, from: format)
-            formats.append(decodedFormat)} 
-            catch {
-                continue
-            }
+            formats.append(decodedFormat)
+            } 
         }
+        catch {
+            print("格式解码失败：\(error)")
+        }
+    
         
         return (formats, try decoder.decode(Info.self, from: info))
     }
