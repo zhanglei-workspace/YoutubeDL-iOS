@@ -11,7 +11,7 @@ let package = Package(
             targets: ["YoutubeDL"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/zhanglei-workspace/FFmpeg-iOS-Lame", from: "0.0.6-b20230730-0000001"),
+        .package(url: "https://github.com/zhanglei-workspace/FFmpeg-iOS-Lame", from: "0.0.6-b20230730-0000002"),
         .package(url: "https://github.com/pvieito/PythonKit.git", from: "0.3.1"),
         .package(url: "https://github.com/kewlbear/Python-iOS.git", from: "0.1.1-b"),
     ],
