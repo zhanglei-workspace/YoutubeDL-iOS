@@ -349,6 +349,9 @@ open class YoutubeDL: NSObject {
             dup2(stdout, STDOUT_FILENO)
             dup2(stderr, STDERR_FILENO)
             
+            try? outPipe.fileHandleForWriting.close()
+            try? errPipe.fileHandleForWriting.close()
+            
             popen.returncode = PythonObject(exitCode)
             
             func read(pipe: Pipe) -> String? {
